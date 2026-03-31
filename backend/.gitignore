@@ -1,0 +1,16 @@
+.venv/
+env/
+venv/
+dataset/
+yolov8s-cls.pt
+test.py
+runs/
+__pycache__/
+*.log
+.env
+*.pyc
+dist/
+build/
+*.spec
+.vscode/
+.idea/

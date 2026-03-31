@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+ultralytics
+colorama
+python-multipart
+mysql-connector-python
+dotenv
