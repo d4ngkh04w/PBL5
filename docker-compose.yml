@@ -8,6 +8,8 @@ services:
             MYSQL_DATABASE: pbl5_db
         volumes:
             - mysql_data:/var/lib/mysql
+        networks:
+            - db-be
         healthcheck:
             test:
                 [
@@ -35,9 +37,24 @@ services:
             DB_URL: mysql+aiomysql://root:root@mysql:3306/pbl5_db
         ports:
             - "5762:5762"
+        networks:
+            - db-be
+            - be-fe
         depends_on:
             mysql:
                 condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "python",
+                    "-c",
+                    "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5762/api/health', timeout=3).getcode() == 200 else 1)",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 15s
 
     frontend:
         build:
@@ -45,10 +62,23 @@ services:
             # dockerfile: Dockerfile
         container_name: frontend
         restart: unless-stopped
+        env_file:
+            - ./frontend/.env
+        environment:
+            VITE_WS_URL: ws://backend:5762/ws
         ports:
             - "5173:5173"
         depends_on:
-            - backend
+            backend:
+                condition: service_healthy
+        networks:
+            - be-fe
 
 volumes:
     mysql_data:
+
+networks:
+    db-be:
+        driver: bridge
+    be-fe:
+        driver: bridge

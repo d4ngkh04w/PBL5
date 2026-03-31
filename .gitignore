@@ -14,3 +14,7 @@ build/
 .vscode/
 .idea/
 node_modules/
+config.h
+*.key
+*.pem
+.pio

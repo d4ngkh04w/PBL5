@@ -4,7 +4,12 @@ import {
     CheckCircle2,
     Layers3,
     Sparkles,
+    Play,
+    Pause,
 } from "lucide-react";
+
+const STREAM_URL =
+    import.meta.env.VITE_STREAM_URL || "http://localhost:8080/stream";
 
 const typeClassMap = {
     Nhựa: "ai-chip ai-chip-plastic",
@@ -21,6 +26,8 @@ const Dashboard = ({
     latestAi,
     logs,
     toast,
+    isStreamActive,
+    onStreamToggle,
 }) => {
     const isCorrectTray = trayPosition === targetTray;
     const aiChipClass = typeClassMap[latestAi.type] || typeClassMap["Khác"];
@@ -76,10 +83,58 @@ const Dashboard = ({
                     <div className="panel-title">
                         <Camera size={18} />
                         <h2>ESP32-CAM Live Stream</h2>
+                        <button
+                            onClick={onStreamToggle}
+                            style={{
+                                marginLeft: "auto",
+                                padding: "6px 12px",
+                                border: "none",
+                                background: isStreamActive
+                                    ? "#ef4444"
+                                    : "#10b981",
+                                color: "white",
+                                borderRadius: "4px",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "14px",
+                            }}
+                        >
+                            {isStreamActive ? (
+                                <>
+                                    <Pause size={16} />
+                                    Dừng
+                                </>
+                            ) : (
+                                <>
+                                    <Play size={16} />
+                                    Phát
+                                </>
+                            )}
+                        </button>
                     </div>
-                    <div className="camera-placeholder">
-                        <span>Khung hình camera placeholder</span>
-                    </div>
+                    {isStreamActive && (
+                        <div className="camera-placeholder">
+                            <img
+                                src={STREAM_URL}
+                                alt="ESP32-CAM Live Stream"
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                }}
+                                onError={() =>
+                                    console.log("Stream connection failed")
+                                }
+                            />
+                        </div>
+                    )}
+                    {!isStreamActive && (
+                        <div className="camera-placeholder">
+                            <span>Stream bị tắt</span>
+                        </div>
+                    )}
                     <div className="camera-ai-result">
                         <span className={aiChipClass}>{latestAi.type}</span>
                         <span>Độ tự tin: {latestAi.confidence}%</span>

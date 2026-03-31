@@ -1,20 +1,17 @@
-import logging
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from core.config import ALLOW_FILE_SIZE
 
-logger = logging.getLogger("request")
-
 
 async def limit_body_size_middleware(request: Request, call_next):
+    if request.method not in {"POST", "PUT", "PATCH"}:
+        return await call_next(request)
+
     content_length = request.headers.get("content-length")
 
     if content_length is None:
-        return JSONResponse(
-            status_code=411, content={"error": "Content-Length header required"}
-        )
+        return await call_next(request)
 
     try:
         content_length = int(content_length)

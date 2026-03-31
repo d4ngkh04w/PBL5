@@ -52,10 +52,10 @@ def setup_logger(debug: bool = False, log_dir: str = "logs"):
 
     log_level = logging.DEBUG if debug else logging.INFO
 
-    file_formatter = CustomFormatter()
+    formatter = CustomFormatter()
 
     request_handler = logging.FileHandler(request_log_file, mode="a", encoding="utf-8")
-    request_handler.setFormatter(file_formatter)
+    request_handler.setFormatter(formatter)
     request_handler.addFilter(LoggerPrefixFilter(("request",), include=True))
 
     prediction_handler = logging.FileHandler(
@@ -63,8 +63,12 @@ def setup_logger(debug: bool = False, log_dir: str = "logs"):
         mode="a",
         encoding="utf-8",
     )
-    prediction_handler.setFormatter(file_formatter)
+    prediction_handler.setFormatter(formatter)
     prediction_handler.addFilter(LoggerPrefixFilter(("prediction",), include=True))
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    console_handler.addFilter(LoggerPrefixFilter(("console",), include=True))
 
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
@@ -75,5 +79,5 @@ def setup_logger(debug: bool = False, log_dir: str = "logs"):
 
     root_logger.addHandler(request_handler)
     root_logger.addHandler(prediction_handler)
-
+    root_logger.addHandler(console_handler)
     return logging.getLogger(__name__)

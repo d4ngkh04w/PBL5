@@ -1,5 +1,6 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
+import { setEsp32StreamState, wsService } from "./services/api";
 import {
     BarChart3,
     LayoutDashboard,
@@ -41,15 +42,51 @@ function App() {
     const [latestAi, setLatestAi] = useState({
         type: "Nhựa",
         confidence: 96.3,
+        image: null,
     });
     const [logs, setLogs] = useState([
         createLog("Khởi động hệ thống", "Thành công"),
         createLog("Đồng bộ cảm biến", "Thành công"),
     ]);
+    const [isStreamActive, setIsStreamActive] = useState(true);
 
     const pushLog = (action, result) => {
         setLogs((prev) => [createLog(action, result), ...prev].slice(0, 8));
     };
+
+    // --- WEBSOCKET CONNECTION ---
+    useEffect(() => {
+        wsService.connect();
+
+        const handleNewTrashDetected = (data) => {
+            console.log("🗑️  New trash detected:", data);
+
+            // Backend returns: {"class": "hazardous", "confidence": 0.95, "image": "data:image/jpeg;..."}
+            const { class: trashClass, confidence, image } = data;
+
+            // Map backend class names to frontend type names
+            const typeMap = {
+                hazardous: "Kim loại",
+                non_recyclable: "Khác",
+                organic: "Giấy",
+                recycling: "Nhựa",
+            };
+
+            const type = typeMap[trashClass] || "Khác";
+            const confidencePercent = Math.round(confidence * 100);
+
+            setLatestAi({ type, confidence: confidencePercent, image });
+            pushLog("AI Nhận diện rác", `${type} (${confidencePercent}%)`);
+            showSuccess(`Nhận diện: ${type} - ${confidencePercent}%`);
+        };
+
+        wsService.on("NEW_TRASH_DETECTED", handleNewTrashDetected);
+
+        return () => {
+            wsService.off("NEW_TRASH_DETECTED", handleNewTrashDetected);
+            wsService.disconnect();
+        };
+    }, []);
 
     const showSuccess = (message) => {
         setToast(message);
@@ -94,6 +131,19 @@ function App() {
         });
     };
 
+    const handleStreamToggle = async () => {
+        const next = !isStreamActive;
+        const ok = await setEsp32StreamState(next);
+
+        if (ok) {
+            setIsStreamActive(next);
+            showSuccess(next ? "Đã bật stream" : "Đã tắt stream");
+            return;
+        }
+
+        showSuccess("Không điều khiển được stream ESP32");
+    };
+
     const dashboardProps = useMemo(
         () => ({
             trayPosition,
@@ -103,8 +153,20 @@ function App() {
             latestAi,
             logs,
             toast,
+            isStreamActive,
+            onStreamToggle: handleStreamToggle,
         }),
-        [trayPosition, targetTray, binWeights, doorOpen, latestAi, logs, toast],
+        [
+            trayPosition,
+            targetTray,
+            binWeights,
+            doorOpen,
+            latestAi,
+            logs,
+            toast,
+            isStreamActive,
+            handleStreamToggle,
+        ],
     );
 
     return (

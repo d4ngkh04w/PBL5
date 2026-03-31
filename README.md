@@ -15,7 +15,7 @@ Luồng dữ liệu:
 
 1. ESP32-CAM chụp ảnh và gửi đến Backend qua API.
 2. Backend nhận ảnh, sử dụng YOLOv8 để phân loại loại rác.
-3. Kết quả phân loại được lưu vào MySQL và trả về cho ESP32-CAM.
+3. Kết quả phân loại được lưu vào MySQL và trả về cho arduino.
 4. Web dashboard hiển thị kết quả phân loại và thống kê.
 
 > Note:

@@ -1,0 +1,39 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// --- WIFI CONFIGURATION ---
+const char* WIFI_SSID = "";
+const char* WIFI_PASSWORD = "";
+
+// --- API CONFIGURATION ---
+const char* API_URL = "";
+const char* API_KEY = "";
+
+// --- SERVER CONFIGURATION ---
+const int STREAM_PORT = 8080;
+const int STREAM_FPS = 10;  // 100ms = ~10 FPS
+const unsigned long PREDICT_INTERVAL = 5000;  // 5 seconds
+const unsigned long STREAM_TIMEOUT = 10 * 60 * 1000;  // 10 minutes
+
+// --- CAMERA CONFIGURATION ---
+const int CAMERA_WIDTH = 160;    // QQVGA
+const int CAMERA_HEIGHT = 120;
+const int CAMERA_QUALITY = 15;   // JPEG quality (1-63)
+const int CAMERA_FB_COUNT = 1;
+
+// --- LOG MESSAGES ---
+const char* LOG_SYSTEM_START = "--- He thong bat dau khoi dong ---";
+const char* LOG_WIFI_CONNECTING = "Dang ket noi WiFi";
+const char* LOG_WIFI_CONNECTED = "WiFi da san sang!";
+const char* LOG_STREAM_STARTED = "MJPEG Stream server started on port 8080";
+const char* LOG_STREAM_INIT = "ESP32-CAM MJPEG Stream Server\nAccess stream at: http://192.168.1.3:8080/stream";
+const char* LOG_CAMERA_INIT_FAILED = "Camera init failed: 0x%x";
+const char* LOG_CAPTURE_START = ">> Bat dau chup anh...";
+const char* LOG_CAPTURE_FAILED = "Chup anh THAT BAI";
+const char* LOG_SENDING = ">> Dang gui anh len Server...";
+const char* LOG_SEND_SUCCESS = "++ THANH CONG: %d\n";
+const char* LOG_SEND_FAILED = "-- THAT BAI: %s\n";
+const char* LOG_WIFI_LOST = "Mat ket noi WiFi, dang thu lai...";
+const char* LOG_STREAM_CAPTURE_FAILED = "Camera capture failed";
+
+#endif // CONFIG_H

@@ -4,5 +4,6 @@ ultralytics==8.4.32
 python-multipart==0.0.22
 aiomysql==0.3.2
 sqlalchemy==2.0.48
-dotenv==0.9.9
+python-dotenv==1.1.1
 cryptography==46.0.6
+watchfiles==1.1.1

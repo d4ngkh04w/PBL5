@@ -4,11 +4,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.api import api_router
+from router.endpoints.websocket import router as websocket_router
+from router.api import router as api_router
 from core.logger import setup_logger
 from database.db import close_db, init_db
 from exceptions.base import APIError
 from middleware import logging, limit_size
+from services.websocket_service import manager
 
 setup_logger(debug=False)
 
@@ -29,10 +31,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix="/api")
+app.include_router(api_router)
+app.include_router(websocket_router)
 
 app.middleware("http")(limit_size.limit_body_size_middleware)
 app.middleware("http")(logging.logging_middleware)
+
+app.state.manager = manager
 
 
 @app.exception_handler(APIError)
@@ -50,4 +55,6 @@ async def app_exception_handler(_: Request, exc: APIError):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app:app", host="0.0.0.0", port=5762)
+    uvicorn.run(
+        "app:app", host="0.0.0.0", port=5762, reload=True, reload_includes=["*.py"]
+    )
