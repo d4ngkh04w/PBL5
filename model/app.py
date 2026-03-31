@@ -1,6 +1,7 @@
-from flask import Flask, request, render_template, redirect
-from PIL import Image
 import base64
+
+from flask import Flask, redirect, render_template, request
+from PIL import Image
 from ultralytics import YOLO
 
 app = Flask(__name__)

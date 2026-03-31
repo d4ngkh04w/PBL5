@@ -2,11 +2,14 @@ import io
 import logging
 
 from PIL import Image
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.model import model, class_names
-from exceptions.errors import ModelError
+from core.model import class_names, model
+from exceptions.errors import DatabaseError, ModelError
+from repositories.prediction_repository import create_prediction_result
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("prediction")
 
 
 def predict_image(img: bytes) -> dict[str, str | float]:
@@ -28,3 +31,18 @@ def predict_image(img: bytes) -> dict[str, str | float]:
         "class": class_names[pred_class],
         "confidence": float(confidence),
     }
+
+
+async def save_prediction_result(
+    db: AsyncSession,
+    prediction: dict[str, str | float],
+) -> None:
+    try:
+        await create_prediction_result(
+            db=db,
+            predicted_class=str(prediction["class"]),
+            confidence=float(prediction["confidence"]),
+        )
+    except SQLAlchemyError as exc:
+        await db.rollback()
+        raise DatabaseError(details=str(exc)) from exc

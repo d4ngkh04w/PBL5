@@ -1,13 +1,13 @@
-import time
 import logging
+
 from fastapi import Request
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("request")
 
 
 async def logging_middleware(request: Request, call_next):
     method = request.method
-    url = str(request.url)
+    path = request.url.path
     client = request.client.host if request.client else "unknown"
     status_code = 200
     try:
@@ -17,6 +17,6 @@ async def logging_middleware(request: Request, call_next):
         status_code = 500
         raise e
     finally:
-        logger.info(f"{client} | {method} {url} | {status_code}")
+        logger.info(f"{client} - {method} {path} - {status_code}")
 
     return response

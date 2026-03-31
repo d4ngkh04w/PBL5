@@ -1,32 +1,23 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import APIRouter, Depends, UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.predict_service import predict_image
-from exceptions.errors import *
-from core.config import ALLOWED_EXTENSIONS, ALLOWED_CONTENT_TYPES, ALLOW_FILE_SIZE
-from api.deps import verify_api_key
+from api.deps import verify_api_key, validate_file
+from database.session import get_db
+from services.predict_service import predict_image, save_prediction_result
 
 router = APIRouter()
 
 
 @router.post("/predict")
 async def predict(
-    file: UploadFile = File(...), _: str = Depends(verify_api_key)
+    _: str = Depends(verify_api_key),
+    validated_file: UploadFile = Depends(validate_file),
+    db: AsyncSession = Depends(get_db),
 ) -> dict[str, str | float]:
 
-    if not (file and file.filename):
-        raise ValueError("No file uploaded")
-
-    if file.filename.split(".")[-1].lower() not in ALLOWED_EXTENSIONS:
-        raise InvalidFileType()
-
-    if file.content_type not in ALLOWED_CONTENT_TYPES:
-        raise UnsupportedMediaType()
-
-    img_bytes = await file.read()
-
-    if len(img_bytes) > ALLOW_FILE_SIZE:
-        raise FileTooLarge(ALLOW_FILE_SIZE)
+    img_bytes = await validated_file.read()
 
     result = predict_image(img_bytes)
+    await save_prediction_result(db, result)
 
     return result

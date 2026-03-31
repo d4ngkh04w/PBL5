@@ -1,7 +1,8 @@
-fastapi
-uvicorn
-ultralytics
-colorama
-python-multipart
-mysql-connector-python
-dotenv
+fastapi==0.135.2
+uvicorn==0.42.0
+ultralytics==8.4.32
+python-multipart==0.0.22
+aiomysql==0.3.2
+sqlalchemy==2.0.48
+dotenv==0.9.9
+cryptography==46.0.6

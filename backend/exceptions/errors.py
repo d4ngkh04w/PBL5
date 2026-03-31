@@ -22,7 +22,7 @@ class FileTooLarge(APIError):
         super().__init__(
             message="File too large",
             status_code=413,
-            details={"Max size": max_size},
+            details={"Max size": "{:.2f} MB".format(max_size / (1024 * 1024))},
         )
 
 
@@ -47,4 +47,13 @@ class Unauthorized(APIError):
         super().__init__(
             message=message,
             status_code=401,
+        )
+
+
+class DatabaseError(APIError):
+    def __init__(self, details: str | dict | None = None):
+        super().__init__(
+            message="Database operation failed",
+            status_code=500,
+            details=details,
         )

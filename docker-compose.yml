@@ -1,0 +1,54 @@
+services:
+    mysql:
+        image: mysql:8.4
+        container_name: db
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: pbl5_db
+        volumes:
+            - mysql_data:/var/lib/mysql
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "mysqladmin",
+                    "ping",
+                    "-h",
+                    "127.0.0.1",
+                    "-uroot",
+                    "-proot",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+
+    backend:
+        build:
+            context: ./backend
+            # dockerfile: Dockerfile
+        container_name: backend
+        restart: unless-stopped
+        env_file:
+            - ./backend/.env
+        environment:
+            DB_URL: mysql+aiomysql://root:root@mysql:3306/pbl5_db
+        ports:
+            - "5762:5762"
+        depends_on:
+            mysql:
+                condition: service_healthy
+
+    frontend:
+        build:
+            context: ./frontend
+            # dockerfile: Dockerfile
+        container_name: frontend
+        restart: unless-stopped
+        ports:
+            - "5173:5173"
+        depends_on:
+            - backend
+
+volumes:
+    mysql_data:
