@@ -4,13 +4,11 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from router.endpoints.websocket import router as websocket_router
 from router.api import router as api_router
 from core.logger import setup_logger
 from database.db import close_db, init_db
 from exceptions.base import APIError
 from middleware import logging, limit_size
-from services.websocket_service import manager
 
 setup_logger(debug=False)
 
@@ -32,12 +30,9 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
-app.include_router(websocket_router)
 
 app.middleware("http")(limit_size.limit_body_size_middleware)
 app.middleware("http")(logging.logging_middleware)
-
-app.state.manager = manager
 
 
 @app.exception_handler(APIError)
