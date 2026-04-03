@@ -1,8 +1,8 @@
-.venv/
-env/
-venv/
+.venv*/
+env*/
+venv*/
 dataset/
-yolov8s-cls.pt
+*.pt
 test.py
 runs/
 __pycache__/
@@ -18,3 +18,5 @@ config.h
 *.key
 *.pem
 .pio
+.agents/
+skills-lock.json

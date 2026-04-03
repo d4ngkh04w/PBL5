@@ -1,11 +1,15 @@
 services:
     mysql:
         image: mysql:8.4
-        container_name: db
         restart: unless-stopped
+        env_file:
+            - ./.env
+        container_name: mysql
         environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: pbl5_db
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+            MYSQL_DATABASE: ${MYSQL_DATABASE:-pbl5_db}
+            MYSQL_USER: ${MYSQL_USER:-pbl5_user}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pbl5_password}
         volumes:
             - mysql_data:/var/lib/mysql
         networks:
@@ -13,13 +17,8 @@ services:
         healthcheck:
             test:
                 [
-                    "CMD",
-                    "mysqladmin",
-                    "ping",
-                    "-h",
-                    "127.0.0.1",
-                    "-uroot",
-                    "-proot",
+                    "CMD-SHELL",
+                    "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}",
                 ]
             interval: 10s
             timeout: 5s
@@ -28,15 +27,13 @@ services:
     backend:
         build:
             context: ./backend
-            # dockerfile: Dockerfile
-        container_name: backend
         restart: unless-stopped
+        container_name: backend
+        init: true
         env_file:
             - ./backend/.env
-        environment:
-            DB_URL: mysql+aiomysql://root:root@mysql:3306/pbl5_db
         ports:
-            - "5762:5762"
+            - "${BACKEND_PORT:-5762}:5762"
         networks:
             - db-be
             - be-fe
@@ -59,18 +56,31 @@ services:
     frontend:
         build:
             context: ./frontend
-            # dockerfile: Dockerfile
-        container_name: frontend
+            target: production
         restart: unless-stopped
+        container_name: frontend
+        init: true
         env_file:
             - ./frontend/.env
         environment:
             VITE_WS_URL: ws://backend:5762/ws
         ports:
-            - "5173:5173"
+            - "${FRONTEND_PORT:-5173}:80"
         depends_on:
             backend:
                 condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "fetch('http://127.0.0.1:5173').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+                ]
+            interval: 15s
+            timeout: 5s
+            retries: 10
+            start_period: 15s
         networks:
             - be-fe
 
@@ -80,5 +90,6 @@ volumes:
 networks:
     db-be:
         driver: bridge
+        internal: true
     be-fe:
         driver: bridge

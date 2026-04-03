@@ -1,6 +1,7 @@
 logs/
 *.log
 test*
+.env
 .env.*
 Dockerfile
 node_modules/

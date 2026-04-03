@@ -33,11 +33,20 @@ async def validate_upload_file(file: UploadFile) -> bytes:
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise UnsupportedMediaType()
 
-    img_bytes = await file.read()
-    if not img_bytes:
+    total_size = 0
+    img_buffer = bytearray()
+    while True:
+        chunk = await file.read(1024 * 1024)
+        if not chunk:
+            break
+
+        total_size += len(chunk)
+        if total_size > ALLOW_FILE_SIZE:
+            raise FileTooLarge(ALLOW_FILE_SIZE)
+
+        img_buffer.extend(chunk)
+
+    if not img_buffer:
         raise InvalidImage()
 
-    if len(img_bytes) > ALLOW_FILE_SIZE:
-        raise FileTooLarge(ALLOW_FILE_SIZE)
-
-    return img_bytes
+    return bytes(img_buffer)

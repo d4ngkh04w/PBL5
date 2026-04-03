@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from router.deps import validate_upload_file, verify_api_key
@@ -18,7 +19,7 @@ async def predict(
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str | float]:
 
-    result = predict_image(image_bytes)
+    result = await run_in_threadpool(predict_image, image_bytes)
     logger.info(f"Prediction result: {result}")
 
     await save_prediction_result(db, result)

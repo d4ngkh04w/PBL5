@@ -4,4 +4,4 @@ class APIError(Exception):
     ):
         self.status_code = status_code
         self.message = message
-        self.details = details or {}
+        self.details = {} if details is None else details

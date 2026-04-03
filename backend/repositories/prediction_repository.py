@@ -15,6 +15,5 @@ async def create_prediction_result(
 
     db.add(prediction)
     await db.commit()
-    await db.refresh(prediction)
 
     return prediction
