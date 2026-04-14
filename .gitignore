@@ -20,3 +20,4 @@ config.h
 .pio
 .agents/
 skills-lock.json
+theme.xml

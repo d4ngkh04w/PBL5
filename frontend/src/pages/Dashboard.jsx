@@ -34,7 +34,11 @@ const Dashboard = ({
 
     return (
         <section className="page dashboard-page">
-            {toast ? <div className="toast-success">{toast}</div> : null}
+            {toast ? (
+                <div className="toast-success" role="status" aria-live="polite">
+                    {toast}
+                </div>
+            ) : null}
 
             <header className="page-header">
                 <h1>Tổng quan</h1>
@@ -50,7 +54,7 @@ const Dashboard = ({
                             ? "Đúng vị trí mục tiêu"
                             : "Lệch vị trí mục tiêu"
                     }
-                    icon={<Layers3 size={18} />}
+                    icon={<Layers3 size={20} />}
                     status={isCorrectTray ? "good" : "warn"}
                 />
                 <MetricCard
@@ -59,21 +63,21 @@ const Dashboard = ({
                     desc={
                         doorOpen ? "Cửa đã mở cho thao tác" : "Cửa đóng an toàn"
                     }
-                    icon={<CheckCircle2 size={18} />}
+                    icon={<CheckCircle2 size={20} />}
                     status={doorOpen ? "warn" : "good"}
                 />
                 <MetricCard
                     title="Loại rác vừa nhận diện"
                     value={latestAi.type}
                     desc="Nhận diện bởi AI"
-                    icon={<Sparkles size={18} />}
+                    icon={<Sparkles size={20} />}
                     status="info"
                 />
                 <MetricCard
                     title="Độ tự tin"
                     value={`${latestAi.confidence}%`}
                     desc="Confidence của mô hình"
-                    icon={<Activity size={18} />}
+                    icon={<Activity size={20} />}
                     status="info"
                 />
             </div>
@@ -85,21 +89,8 @@ const Dashboard = ({
                         <h2>ESP32-CAM Live Stream</h2>
                         <button
                             onClick={onStreamToggle}
-                            style={{
-                                marginLeft: "auto",
-                                padding: "6px 12px",
-                                border: "none",
-                                background: isStreamActive
-                                    ? "#ef4444"
-                                    : "#10b981",
-                                color: "white",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                fontSize: "14px",
-                            }}
+                            className={`stream-toggle-btn ${isStreamActive ? "active" : "inactive"}`}
+                            aria-label={isStreamActive ? "Dừng stream" : "Phát stream"}
                         >
                             {isStreamActive ? (
                                 <>
@@ -119,11 +110,6 @@ const Dashboard = ({
                             <img
                                 src={STREAM_URL}
                                 alt="ESP32-CAM Live Stream"
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                }}
                                 onError={() =>
                                     console.log("Stream connection failed")
                                 }
@@ -167,6 +153,7 @@ const Dashboard = ({
                     </div>
                     <div
                         className={`door-state ${doorOpen ? "open" : "closed"}`}
+                        role="status"
                     >
                         Cửa sập: {doorOpen ? "MỞ" : "ĐÓNG"}
                     </div>

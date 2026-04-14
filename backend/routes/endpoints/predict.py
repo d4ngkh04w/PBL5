@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from router.deps import validate_upload_file, verify_api_key
+from routes.deps import validate_upload_file, verify_api_key
 from database.session import get_db
 from services.predict_service import predict_image, save_prediction_result
 

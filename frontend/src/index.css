@@ -1,22 +1,153 @@
+/* ═══════════════════════════════════════════════════════
+   CORPORATE TRUST DESIGN SYSTEM — TOKENS & GLOBALS
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 :root {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    color: #0f172a;
-    line-height: 1.45;
-    font-weight: 400;
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    /* ── Colors ── */
+    --bg: #F8FAFC;
+    --surface: #FFFFFF;
+    --primary: #4F46E5;
+    --secondary: #7C3AED;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    --text-light: #94A3B8;
+    --accent-success: #10B981;
+    --accent-warn: #F59E0B;
+    --accent-danger: #EF4444;
+    --border: #E2E8F0;
+    --border-light: #F1F5F9;
+
+    /* ── Gradient Presets ── */
+    --gradient-primary: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+    --gradient-bg-subtle: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+    --gradient-dark: linear-gradient(135deg, #312E81 0%, #1E1B4B 100%);
+
+    /* ── Shadows (Colored — Indigo-tinted) ── */
+    --shadow-sm: 0 1px 3px 0 rgba(79, 70, 229, 0.06), 0 1px 2px -1px rgba(79, 70, 229, 0.06);
+    --shadow-card: 0 4px 20px -2px rgba(79, 70, 229, 0.1);
+    --shadow-card-hover: 0 10px 25px -5px rgba(79, 70, 229, 0.15), 0 8px 10px -6px rgba(79, 70, 229, 0.1);
+    --shadow-button: 0 4px 14px 0 rgba(79, 70, 229, 0.3);
+    --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.5);
+    --shadow-lg: 0 10px 40px -10px rgba(79, 70, 229, 0.12);
+
+    /* ── Radius ── */
+    --radius-xl: 12px;
+    --radius-lg: 8px;
+    --radius-full: 9999px;
+    --radius-md: 6px;
+
+    /* ── Typography ── */
+    --font-family: 'Plus Jakarta Sans', sans-serif;
+
+    /* ── Transitions ── */
+    --transition-fast: 200ms ease-out;
+    --transition-base: 300ms ease-out;
+    --transition-slow: 500ms ease-out;
 }
 
-* {
+/* ── Reset & Global ── */
+*,
+*::before,
+*::after {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
-    margin: 0;
+    font-family: var(--font-family);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-main);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 #root {
     min-height: 100vh;
+}
+
+/* ── Typography ── */
+h1, h2, h3 {
+    font-family: var(--font-family);
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+h1 {
+    font-weight: 800;
+    font-size: 2rem;
+}
+
+h2 {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+h3 {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* ── Focus States ── */
+:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--primary);
+    border-radius: var(--radius-lg);
+}
+
+/* ── Selection ── */
+::selection {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-light);
+}
+
+/* ── Keyframes ── */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-soft {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.5; }
 }

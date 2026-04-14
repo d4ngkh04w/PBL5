@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from core.config import CORS_ALLOW_ORIGINS
-from router.api import router as api_router
+from routes.api import router as api_router
 from core.logger import setup_logger
 from database.db import close_db, init_db
 from exceptions.base import APIError
