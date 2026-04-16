@@ -2,11 +2,35 @@ import os
 
 from ultralytics import YOLO
 
-model = YOLO(os.path.join(os.path.dirname(__file__), "..", "model", "best.pt"))
+model_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "model", "best.pt")
+)
+
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"Model file not found at {model_path}")
+
+model = YOLO(model_path)
 
 class_names = [
-    "hazardous",
-    "non_recyclable",
-    "organic",
-    "recycling",
+    "battery",
+    "biological",
+    "cardboard",
+    "clothes",
+    "glass",
+    "metal",
+    "paper",
+    "plastic",
+    "shoes",
 ]
+
+mapped_class_names = {
+    "battery": "hazardous",
+    "biological": "organic",
+    "cardboard": "recycling",
+    "clothes": "non_recyclable",
+    "glass": "recycling",
+    "metal": "recycling",
+    "paper": "recycling",
+    "plastic": "recycling",
+    "shoes": "non_recyclable",
+}

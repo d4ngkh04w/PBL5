@@ -10,9 +10,8 @@ class PredictionResult(Base):
     __tablename__ = "prediction_results"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    predicted_class: Mapped[str] = mapped_column(
-        String(100), nullable=False, index=True
-    )
+    predicted_class: Mapped[str] = mapped_column(String(15), nullable=False, index=True)
+    predicted_group: Mapped[str] = mapped_column(String(15), nullable=False, index=True)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -1,24 +1,16 @@
-from fastapi import Header, UploadFile
+from fastapi import UploadFile
 
 from core.config import (
     ALLOWED_CONTENT_TYPES,
     ALLOWED_EXTENSIONS,
     ALLOW_FILE_SIZE,
-    API_KEY,
 )
 from exceptions.errors import (
     FileTooLarge,
     InvalidFileType,
     InvalidImage,
-    Unauthorized,
     UnsupportedMediaType,
 )
-
-
-def verify_api_key(x_api_key: str = Header(default="")) -> str:
-    if x_api_key != API_KEY:
-        raise Unauthorized("Invalid API key")
-    return x_api_key
 
 
 async def validate_upload_file(file: UploadFile) -> bytes:
