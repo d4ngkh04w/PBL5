@@ -17,17 +17,19 @@ async def limit_body_size_middleware(request: Request, call_next):
         content_length = int(content_length)
     except ValueError:
         return JSONResponse(
-            status_code=400, content={"error": "Invalid Content-Length"}
+            status_code=400,
+            content={"code": 400, "message": "Invalid Content-Length"},
         )
 
     if content_length > ALLOW_FILE_SIZE:
         return JSONResponse(
             status_code=413,
             content={
-                "error": {
-                    "message": "Request too large",
+                "code": 413,
+                "message": "Request too large",
+                "details": {
                     "max_size": "{:.2f} MB".format(ALLOW_FILE_SIZE / (1024 * 1024)),
-                }
+                },
             },
         )
 

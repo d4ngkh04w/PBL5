@@ -21,3 +21,4 @@ config.h
 .agents/
 skills-lock.json
 theme.xml
+uploads/

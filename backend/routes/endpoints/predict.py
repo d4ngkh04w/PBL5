@@ -7,7 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.limiter import limiter
 from routes.deps import validate_upload_file
 from database.session import get_db
-from services.predict_service import predict_image, save_prediction_result
+from services.predict_service import (
+    predict_image,
+    save_prediction_result,
+    save_image,
+)
 
 router = APIRouter()
 logger = logging.getLogger("console")
@@ -26,5 +30,7 @@ async def predict(
     logger.info(f"Prediction result: {result}")
 
     await save_prediction_result(db, result)
+
+    await run_in_threadpool(save_image, image_bytes, result.class_name)
 
     return result

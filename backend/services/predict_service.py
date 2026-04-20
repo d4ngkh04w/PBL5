@@ -1,4 +1,6 @@
 import io
+import os
+import uuid
 import logging
 
 from PIL import Image, UnidentifiedImageError
@@ -6,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.model import class_names, model, mapped_class_names
-from core.config import CONF_THRESHOLD, MARGIN
+from core.config import CONF_THRESHOLD, MARGIN, UPLOAD_DIR
 from exceptions.errors import DatabaseError, InvalidImage, ModelError
 from repositories.prediction_repository import create_prediction_result
 from schemas.predict import PredictionResponse
@@ -90,3 +92,17 @@ async def save_prediction_result(
     except SQLAlchemyError as exc:
         await db.rollback()
         raise DatabaseError(details=str(exc)) from exc
+
+
+def save_image(img: bytes, class_name: str) -> None:
+    try:
+        class_dir = os.path.join(UPLOAD_DIR, class_name)
+        os.makedirs(class_dir, exist_ok=True)
+
+        filename = f"{uuid.uuid4().hex}.jpg"
+        filepath = os.path.join(class_dir, filename)
+
+        with Image.open(io.BytesIO(img)) as image:
+            image.convert("RGB").save(filepath, format="JPEG")
+    except Exception:
+        console.exception("Failed to save image to disk")

@@ -28,6 +28,7 @@ ALLOWED_CONTENT_TYPES = {
     "image/bmp",
     "image/tiff",
 }
+UPLOAD_DIR = "uploads"
 
 # -- API Configurations ---
 API_KEY = _get_required_env("API_KEY")
