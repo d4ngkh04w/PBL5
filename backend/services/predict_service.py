@@ -3,9 +3,11 @@ import os
 import uuid
 import logging
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError, ImageOps
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+import numpy as np
+import cv2
 
 from core.model import class_names, model, mapped_class_names
 from core.config import CONF_THRESHOLD, MARGIN, UPLOAD_DIR
@@ -17,16 +19,62 @@ logger = logging.getLogger("prediction")
 console = logging.getLogger("console")
 
 
+def preprocess_image(img_pil: Image.Image) -> Image.Image:
+    img_np = np.array(img_pil)
+
+    # DENOISE
+    # ESP32-CAM có sensor noise cao, đặc biệt ở điều kiện ánh sáng yếu
+    img_np = cv2.fastNlMeansDenoisingColored(
+        img_np, None, h=6, hColor=6, templateWindowSize=7, searchWindowSize=21
+    )
+
+    # AUTO WHITE BALANCE (Gray World)
+    # Cân bằng màu sắc bị lệch do đèn LED / ánh sáng môi trường
+    img_float = img_np.astype(np.float32)
+    mean_r, mean_g, mean_b = (
+        img_float[:, :, 0].mean(),
+        img_float[:, :, 1].mean(),
+        img_float[:, :, 2].mean(),
+    )
+    mean_gray = (mean_r + mean_g + mean_b) / 3
+    img_float[:, :, 0] = np.clip(
+        img_float[:, :, 0] * (mean_gray / (mean_r + 1e-6)), 0, 255
+    )
+    img_float[:, :, 1] = np.clip(
+        img_float[:, :, 1] * (mean_gray / (mean_g + 1e-6)), 0, 255
+    )
+    img_float[:, :, 2] = np.clip(
+        img_float[:, :, 2] * (mean_gray / (mean_b + 1e-6)), 0, 255
+    )
+    img_np = img_float.astype(np.uint8)
+
+    # CLAHE (Contrast enhancement)
+    # Tăng độ tương phản cục bộ, hữu ích khi lighting không đều
+    lab = cv2.cvtColor(img_np, cv2.COLOR_RGB2LAB)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    lab[:, :, 0] = clahe.apply(lab[:, :, 0])
+    img_np = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
+
+    # UNSHARP MASK (Sharpen)
+    # ESP32-CAM thường cho ảnh hơi mờ (lens chất lượng thấp)
+    gaussian = cv2.GaussianBlur(img_np, (0, 0), sigmaX=2.0)
+    img_np = cv2.addWeighted(img_np, 1.5, gaussian, -0.5, 0)
+
+    return Image.fromarray(img_np)
+
+
 def predict_image(img: bytes) -> PredictionResponse:
     try:
         with Image.open(io.BytesIO(img)) as image:
-            prepared_image = image.convert("RGB")
+            prepared_image = preprocess_image(
+                ImageOps.exif_transpose(image).convert("RGB")
+            )
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         console.warning("Invalid image payload: %s", exc)
         raise InvalidImage() from exc
 
     try:
-        results = model(prepared_image, verbose=False)
+        results = model(prepared_image, imgsz=384, verbose=False)
     except Exception as exc:
         console.exception("Model inference failed")
         raise ModelError() from exc
