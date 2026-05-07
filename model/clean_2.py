@@ -31,26 +31,32 @@ def main():
             files_to_delete.update(bad_paths)
             print(f" > Phát hiện {len(bad_paths)} ảnh lỗi chất lượng ({issue})")
 
-    # --- CHẾ ĐỘ 2: XỬ LÝ ẢNH TRÙNG LẶP (GIỮ LẠI 1, XÓA CÁC BẢN SAO) ---
+    # --- CHẾ ĐỘ 2: XỬ LÝ ẢNH TRÙNG LẶP GẦN GIỐNG (NEAR DUPLICATES) ---
     if "is_near_duplicates_issue" in df.columns:
-        # Lấy danh sách các nhóm ảnh trùng lặp từ Imagelab
-        # Cleanvision lưu thông tin các cụm (clusters) ảnh giống nhau ở đây
-        duplicate_sets = imagelab.info["near_duplicates"]["sets"]
-
-        dupe_delete_count = 0
-        for dupe_set in duplicate_sets:
-            # dupe_set là một danh sách các đường dẫn ảnh giống nhau
-            # Ví dụ: ['path/to/img1.jpg', 'path/to/img2.jpg']
-
+        near_duplicate_sets = imagelab.info["near_duplicates"]["sets"]
+        near_dupe_delete_count = 0
+        for dupe_set in near_duplicate_sets:
             if len(dupe_set) > 1:
-                # GIỮ LẠI ảnh đầu tiên (hoặc bạn có thể chọn ảnh có score cao nhất)
-                # XÓA từ ảnh thứ 2 trở đi
+                # Giữ lại 1, xóa các bản sao còn lại
                 to_remove = dupe_set[1:]
                 files_to_delete.update(to_remove)
-                dupe_delete_count += len(to_remove)
-
+                near_dupe_delete_count += len(to_remove)
         print(
-            f" > Phát hiện {len(duplicate_sets)} nhóm trùng lặp. Sẽ xóa {dupe_delete_count} bản sao, giữ lại {len(duplicate_sets)} ảnh gốc."
+            f" > Phát hiện {len(near_duplicate_sets)} nhóm trùng gần giống. Sẽ xóa {near_dupe_delete_count} bản sao."
+        )
+
+    # --- CHẾ ĐỘ 3: XỬ LÝ ẢNH TRÙNG LẶP TUYỆT ĐỐI (EXACT DUPLICATES) ---
+    if "is_exact_duplicates_issue" in df.columns:
+        exact_duplicate_sets = imagelab.info["exact_duplicates"]["sets"]
+        exact_dupe_delete_count = 0
+        for dupe_set in exact_duplicate_sets:
+            if len(dupe_set) > 1:
+                # Giữ lại ảnh đầu tiên, đánh dấu các ảnh còn lại để xóa
+                to_remove = dupe_set[1:]
+                files_to_delete.update(to_remove)
+                exact_dupe_delete_count += len(to_remove)
+        print(
+            f" > Phát hiện {len(exact_duplicate_sets)} nhóm trùng tuyệt đối. Sẽ xóa {exact_dupe_delete_count} bản sao."
         )
 
     # --- THỰC HIỆN XÓA VẬT LÝ ---
