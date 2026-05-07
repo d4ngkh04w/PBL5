@@ -33,6 +33,7 @@ UPLOAD_DIR = "uploads"
 # -- API Configurations ---
 API_KEY = _get_required_env("API_KEY")
 DB_URL = os.getenv("DB_URL", "mysql+aiomysql://user:password@127.0.0.1:3306/dbname")
+ESP32_GROUP_CALLBACK_URL = os.getenv("ESP32_GROUP_CALLBACK_URL", "").strip()
 CORS_ALLOW_ORIGINS = _get_cors_allow_origins()
 
 # -- Logging Configurations ---
