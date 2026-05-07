@@ -7,9 +7,10 @@ import {
     Play,
     Pause,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const STREAM_URL =
-    import.meta.env.VITE_STREAM_URL || "http://localhost:8080/stream";
+    import.meta.env.VITE_STREAM_URL || "http://192.168.1.27:81/stream";
 
 const typeClassMap = {
     Nhựa: "ai-chip ai-chip-plastic",
@@ -31,6 +32,17 @@ const Dashboard = ({
 }) => {
     const isCorrectTray = trayPosition === targetTray;
     const aiChipClass = typeClassMap[latestAi.type] || typeClassMap["Khác"];
+    const [streamError, setStreamError] = useState(false);
+    const [streamSession, setStreamSession] = useState(Date.now());
+
+    const streamSrc = `${STREAM_URL}${STREAM_URL.includes("?") ? "&" : "?"}t=${streamSession}`;
+
+    useEffect(() => {
+        if (isStreamActive) {
+            setStreamError(false);
+            setStreamSession(Date.now());
+        }
+    }, [isStreamActive]);
 
     return (
         <section className="page dashboard-page">
@@ -107,13 +119,19 @@ const Dashboard = ({
                     </div>
                     {isStreamActive && (
                         <div className="camera-placeholder">
-                            <img
-                                src={STREAM_URL}
-                                alt="ESP32-CAM Live Stream"
-                                onError={() =>
-                                    console.log("Stream connection failed")
-                                }
-                            />
+                            {streamError ? (
+                                <div className="camera-error">
+                                    <span>Không tải được stream</span>
+                                    <small>{STREAM_URL}</small>
+                                </div>
+                            ) : (
+                                <img
+                                    src={streamSrc}
+                                    alt="ESP32-CAM Live Stream"
+                                    onError={() => setStreamError(true)}
+                                    onLoad={() => setStreamError(false)}
+                                />
+                            )}
                         </div>
                     )}
                     {!isStreamActive && (
