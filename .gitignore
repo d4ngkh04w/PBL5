@@ -22,3 +22,4 @@ config.h
 skills-lock.json
 theme.xml
 uploads/
+misclassified_images/
