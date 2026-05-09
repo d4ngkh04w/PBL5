@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, Form, Request, Response
+from fastapi import APIRouter, Depends, Form, Request, Response, BackgroundTasks
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,6 +23,7 @@ logger = logging.getLogger("console")
 async def predict(
     request: Request,
     response: Response,
+    background_tasks: BackgroundTasks,
     weight: float = Form(...),
     image_bytes: bytes = Depends(validate_upload_file),
     db: AsyncSession = Depends(get_db),
@@ -33,8 +34,8 @@ async def predict(
     await save_prediction_result(db, result)
 
     await run_in_threadpool(save_image, image_bytes, result.class_name)
-
-    await run_in_threadpool(notify_esp32, group=result.group, weight=weight)
+    
+    background_tasks.add_task(notify_esp32, group=result.group, weight=weight)
 
     result.weight = weight
 
