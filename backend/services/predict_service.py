@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import numpy as np
 import cv2
 
-from core.model import class_names, model, mapped_class_names
+from core.model import ensemble, CLASS_NAMES, MAPPED_CLASS_NAMES
 from core.config import CONF_THRESHOLD, MARGIN, UPLOAD_DIR
 from exceptions.errors import DatabaseError, InvalidImage, ModelError
 from repositories.prediction_repository import create_prediction_result
@@ -74,18 +74,16 @@ def predict_image(img: bytes) -> PredictionResponse:
         raise InvalidImage() from exc
 
     try:
-        results = model(prepared_image, imgsz=384, verbose=False)
+        result = ensemble.predict(prepared_image)
     except Exception as exc:
         console.exception("Model inference failed")
         raise ModelError() from exc
 
-    if not results or not results[0].probs:
+    top5_indices = result["top5"]
+    top5_confs = result["top5conf"]
+
+    if not top5_indices:
         raise ModelError()
-
-    probabilities = results[0].probs
-
-    top5_indices = probabilities.top5
-    top5_confs = probabilities.top5conf
 
     top1_idx = top5_indices[0]
     top2_idx = top5_indices[1] if len(top5_indices) > 1 else None
@@ -93,8 +91,8 @@ def predict_image(img: bytes) -> PredictionResponse:
     conf_1 = float(top5_confs[0])
     conf_2 = float(top5_confs[1]) if top2_idx is not None else 0.0
 
-    class_1 = class_names[top1_idx]
-    class_2 = class_names[top2_idx] if top2_idx is not None else "none"
+    class_1 = CLASS_NAMES[top1_idx]
+    class_2 = CLASS_NAMES[top2_idx] if top2_idx is not None else "none"
 
     logger.info("Top 1: %s (%.4f) | Top 2: %s (%.4f)", class_1, conf_1, class_2, conf_2)
 
@@ -115,14 +113,12 @@ def predict_image(img: bytes) -> PredictionResponse:
     else:
         predicted_class_name = class_1
 
-    predicted_class_group = mapped_class_names.get(
+    predicted_class_group = MAPPED_CLASS_NAMES.get(
         predicted_class_name, "non_recyclable"
     )
 
     return PredictionResponse(
-        class_name=predicted_class_name,
-        group=predicted_class_group,
-        confidence=conf_1,
+        class_name=predicted_class_name, group=predicted_class_group, confidence=conf_1
     )
 
 
