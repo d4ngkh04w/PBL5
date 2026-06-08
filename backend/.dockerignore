@@ -1,0 +1,13 @@
+logs/
+__pycache__/
+test*
+.env
+.env.*
+.venv/
+.git/
+.gitignore
+.vscode/
+*.log
+*.pyc
+Dockerfile
+uploads/

@@ -1,11 +1,14 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
+import { setEsp32StreamState, wsService } from "./services/api";
 import {
     BarChart3,
     LayoutDashboard,
+    Menu,
     Power,
     RotateCw,
     Trash2,
+    X,
 } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import Statistics from "./pages/Statistics";
@@ -41,15 +44,52 @@ function App() {
     const [latestAi, setLatestAi] = useState({
         type: "Nhựa",
         confidence: 96.3,
+        image: null,
     });
     const [logs, setLogs] = useState([
         createLog("Khởi động hệ thống", "Thành công"),
         createLog("Đồng bộ cảm biến", "Thành công"),
     ]);
+    const [isStreamActive, setIsStreamActive] = useState(true);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const pushLog = (action, result) => {
         setLogs((prev) => [createLog(action, result), ...prev].slice(0, 8));
     };
+
+    // --- WEBSOCKET CONNECTION ---
+    useEffect(() => {
+        wsService.connect();
+
+        const handleNewTrashDetected = (data) => {
+            console.log("🗑️  New trash detected:", data);
+
+            // Backend returns: {"class": "hazardous", "confidence": 0.95, "image": "data:image/jpeg;..."}
+            const { class: trashClass, confidence, image } = data;
+
+            // Map backend class names to frontend type names
+            const typeMap = {
+                hazardous: "Kim loại",
+                non_recyclable: "Khác",
+                organic: "Giấy",
+                recycling: "Nhựa",
+            };
+
+            const type = typeMap[trashClass] || "Khác";
+            const confidencePercent = Math.round(confidence * 100);
+
+            setLatestAi({ type, confidence: confidencePercent, image });
+            pushLog("AI Nhận diện rác", `${type} (${confidencePercent}%)`);
+            showSuccess(`Nhận diện: ${type} - ${confidencePercent}%`);
+        };
+
+        wsService.on("NEW_TRASH_DETECTED", handleNewTrashDetected);
+
+        return () => {
+            wsService.off("NEW_TRASH_DETECTED", handleNewTrashDetected);
+            wsService.disconnect();
+        };
+    }, []);
 
     const showSuccess = (message) => {
         setToast(message);
@@ -94,6 +134,19 @@ function App() {
         });
     };
 
+    const handleStreamToggle = async () => {
+        const next = !isStreamActive;
+        const ok = await setEsp32StreamState(next);
+
+        if (ok) {
+            setIsStreamActive(next);
+            showSuccess(next ? "Đã bật stream" : "Đã tắt stream");
+            return;
+        }
+
+        showSuccess("Không điều khiển được stream ESP32");
+    };
+
     const dashboardProps = useMemo(
         () => ({
             trayPosition,
@@ -103,75 +156,103 @@ function App() {
             latestAi,
             logs,
             toast,
+            isStreamActive,
+            onStreamToggle: handleStreamToggle,
         }),
-        [trayPosition, targetTray, binWeights, doorOpen, latestAi, logs, toast],
+        [
+            trayPosition,
+            targetTray,
+            binWeights,
+            doorOpen,
+            latestAi,
+            logs,
+            toast,
+            isStreamActive,
+            handleStreamToggle,
+        ],
     );
 
     return (
         <BrowserRouter>
             <div className="app-shell">
-                <aside className="sidebar">
-                    <div className="brand">
-                        <Trash2 size={18} />
-                        <span>Smart Bin</span>
+                <aside className="sidebar" aria-label="Thanh điều hướng">
+                    <div className="sidebar-top">
+                        <div className="brand">
+                            <div className="brand-icon">
+                                <Trash2 size={20} />
+                            </div>
+                            <span>Smart Bin</span>
+                        </div>
+                        <button
+                            className="mobile-menu-btn"
+                            onClick={() => setMobileMenuOpen((v) => !v)}
+                            aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
+                            aria-expanded={mobileMenuOpen}
+                        >
+                            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                        </button>
                     </div>
 
-                    <nav className="menu">
-                        <NavLink
-                            to="/"
-                            end
-                            className={({ isActive }) =>
-                                `menu-item ${isActive ? "active" : ""}`
-                            }
-                        >
-                            <LayoutDashboard size={18} />
-                            <span>Dashboard</span>
-                        </NavLink>
-                        <NavLink
-                            to="/statistics"
-                            className={({ isActive }) =>
-                                `menu-item ${isActive ? "active" : ""}`
-                            }
-                        >
-                            <BarChart3 size={18} />
-                            <span>Thống kê</span>
-                        </NavLink>
-                    </nav>
+                    <div className={`sidebar-collapse ${mobileMenuOpen ? "open" : ""}`}>
+                        <nav className="menu" aria-label="Menu chính">
+                            <NavLink
+                                to="/"
+                                end
+                                className={({ isActive }) =>
+                                    `menu-item ${isActive ? "active" : ""}`
+                                }
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <LayoutDashboard size={18} />
+                                <span>Dashboard</span>
+                            </NavLink>
+                            <NavLink
+                                to="/statistics"
+                                className={({ isActive }) =>
+                                    `menu-item ${isActive ? "active" : ""}`
+                                }
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                <BarChart3 size={18} />
+                                <span>Thống kê</span>
+                            </NavLink>
+                        </nav>
 
-                    <div className="control-panel">
-                        <p className="control-title">Bộ điều khiển</p>
-                        <label className="control-label" htmlFor="target-tray">
-                            Chọn ngăn muốn xoay tới
-                        </label>
-                        <select
-                            id="target-tray"
-                            className="control-select"
-                            value={targetTray}
-                            onChange={(event) =>
-                                setTargetTray(Number(event.target.value))
-                            }
-                        >
-                            <option value={1}>Ngăn 1</option>
-                            <option value={2}>Ngăn 2</option>
-                            <option value={3}>Ngăn 3</option>
-                            <option value={4}>Ngăn 4</option>
-                        </select>
-                        <button
-                            type="button"
-                            className="control-btn"
-                            onClick={handleRotateTray}
-                        >
-                            <span>Xoay mâm tới ngăn đã chọn</span>
-                            <RotateCw size={16} />
-                        </button>
-                        <button
-                            type="button"
-                            className="control-btn secondary"
-                            onClick={handleToggleDoor}
-                        >
-                            <span>{doorOpen ? "Đóng cửa" : "Mở cửa"}</span>
-                            <Power size={16} />
-                        </button>
+                        <div className="control-panel">
+                            <p className="control-title">Bộ điều khiển</p>
+                            <label className="control-label" htmlFor="target-tray">
+                                Chọn ngăn muốn xoay tới
+                            </label>
+                            <select
+                                id="target-tray"
+                                className="control-select"
+                                value={targetTray}
+                                onChange={(event) =>
+                                    setTargetTray(Number(event.target.value))
+                                }
+                            >
+                                <option value={1}>Ngăn 1</option>
+                                <option value={2}>Ngăn 2</option>
+                                <option value={3}>Ngăn 3</option>
+                                <option value={4}>Ngăn 4</option>
+                            </select>
+                            <button
+                                type="button"
+                                className="control-btn"
+                                onClick={handleRotateTray}
+                            >
+                                <span>Xoay mâm tới ngăn đã chọn</span>
+                                <RotateCw size={16} />
+                            </button>
+                            <button
+                                type="button"
+                                className="control-btn secondary"
+                                onClick={handleToggleDoor}
+                            >
+                                <span>{doorOpen ? "Đóng cửa" : "Mở cửa"}</span>
+                                <Power size={16} />
+                            </button>
+                        </div>
                     </div>
                 </aside>
 

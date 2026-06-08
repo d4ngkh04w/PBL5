@@ -1,8 +1,8 @@
-.venv/
-env/
-venv/
+.venv*/
+env*/
+venv*/
 dataset/
-yolov8s-cls.pt
+*.pt
 test.py
 runs/
 __pycache__/
@@ -14,3 +14,12 @@ build/
 .vscode/
 .idea/
 node_modules/
+config.h
+*.key
+*.pem
+.pio
+.agents/
+skills-lock.json
+theme.xml
+uploads/
+misclassified_images/

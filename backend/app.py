@@ -1,102 +1,47 @@
-# from fastapi import FastAPI, File, UploadFile
-# from fastapi.responses import JSONResponse
-# from ultralytics import YOLO
-# from PIL import Image, UnidentifiedImageError
-# import io
+from contextlib import asynccontextmanager
 
-# app = FastAPI()
-# model = YOLO("model/best.pt")
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from slowapi.middleware import SlowAPIMiddleware
 
-# class_names = [
-#     "hazardous",
-#     "non_recyclable",
-#     "organic",
-#     "recycling",
-# ]
+from core.config import CORS_ALLOW_ORIGINS
+from core.limiter import limiter
+from routes.api import router as api_router
+from core.logger import get_logger_config
+from database.db import close_db, init_db
+from exceptions.handlers import register_exception_handlers
+from middleware import limit_size
 
 
-# class APIError(Exception):
-#     def __init__(self, message: str):
-#         self.message = message
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    await init_db()
+    yield
+    await close_db()
 
 
-# @app.post("/api/predict")
-# async def predict(file: UploadFile = File(...)):
-#     # Validate file
-#     if not file.size or file.size > 5 * 1024 * 1024:  # 5MB limit
-#         raise APIError("File size exceeds limit of 5MB")
+app = FastAPI(lifespan=lifespan)
 
-#     allowed_extensions = ["png", "jpg", "jpeg", "webp", "bmp", "tiff", "jfif"]
-#     if (
-#         not file.filename
-#         or file.filename.split(".")[-1].lower() not in allowed_extensions
-#     ):
-#         raise APIError("Invalid file type")
+register_exception_handlers(app)
 
-#     if file.content_type not in [
-#         "image/png",
-#         "image/jpeg",
-#         "image/webp",
-#         "image/bmp",
-#         "image/tiff",
-#     ]:
-#         raise APIError("Unsupported media type")
-
-#     img_bytes = await file.read()
-#     try:
-#         img = Image.open(io.BytesIO(img_bytes))
-#     except UnidentifiedImageError:
-#         raise APIError("Invalid image file")
-
-#     results = model(img)
-#     if not results or not results[0].probs:
-#         raise APIError("Model did not return classification result")
-#     pred_class = results[0].probs.top1
-#     confidence = results[0].probs.top1conf
-
-#     return {"class": class_names[pred_class], "confidence": float(confidence)}
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
 
 
-# @app.exception_handler(APIError)
-# async def api_error_handler(request, exc):
-#     return JSONResponse(status_code=400, content={"error": exc.message})
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True,
+)
 
+app.include_router(api_router)
 
-# if __name__ == "__main__":
-#     import uvicorn
-
-#     uvicorn.run("app:app", host="0.0.0.0", port=5762)
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-
-from core.logger import setup_logger
-from exceptions.base import APIError
-from middleware.logging import logging_middleware
-from api.api import api_router
-
-setup_logger(debug=True)
-
-app = FastAPI()
-app.include_router(api_router, prefix="/api")
-
-app.middleware("http")(logging_middleware)
-
-
-@app.exception_handler(APIError)
-async def app_exception_handler(request: Request, exc: APIError):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": {
-                "message": exc.message,
-                "code": exc.status_code,
-                "details": exc.details,
-            }
-        },
-    )
+app.middleware("http")(limit_size.limit_body_size_middleware)
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app:app", host="0.0.0.0", port=5762)
+    uvicorn.run("app:app", host="0.0.0.0", port=5762, log_config=get_logger_config())

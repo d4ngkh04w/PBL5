@@ -10,7 +10,8 @@ import {
     YAxis,
 } from "recharts";
 
-const colors = ["#3b82f6", "#ef4444", "#f59e0b", "#64748b"];
+/* Corporate Trust palette: Indigo → Violet → Emerald → Slate */
+const colors = ["#4F46E5", "#7C3AED", "#10B981", "#64748B"];
 
 const Statistics = ({ logs, trayPosition, latestAi }) => {
     const wasteData = [
@@ -38,7 +39,7 @@ const Statistics = ({ logs, trayPosition, latestAi }) => {
             <div className="stats-top-grid">
                 <div className="metric-card">
                     <div className="metric-icon">
-                        <Database size={18} />
+                        <Database size={20} />
                     </div>
                     <p className="metric-title">Tổng lượt phân loại</p>
                     <p className="metric-value">88</p>
@@ -48,7 +49,7 @@ const Statistics = ({ logs, trayPosition, latestAi }) => {
                 </div>
                 <div className="metric-card">
                     <div className="metric-icon">
-                        <TrendingUp size={18} />
+                        <TrendingUp size={20} />
                     </div>
                     <p className="metric-title">Loại rác phổ biến</p>
                     <p className="metric-value">{latestAi.type}</p>
@@ -58,7 +59,7 @@ const Statistics = ({ logs, trayPosition, latestAi }) => {
                 </div>
                 <div className="metric-card">
                     <div className="metric-icon">
-                        <Clock3 size={18} />
+                        <Clock3 size={20} />
                     </div>
                     <p className="metric-title">Vị trí mâm hiện tại</p>
                     <p className="metric-value">Ngăn {trayPosition}</p>
@@ -85,10 +86,35 @@ const Statistics = ({ logs, trayPosition, latestAi }) => {
                             <CartesianGrid
                                 strokeDasharray="4 4"
                                 vertical={false}
+                                stroke="#E2E8F0"
                             />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
+                            <XAxis
+                                dataKey="name"
+                                tick={{ fill: "#64748B", fontSize: 13 }}
+                                axisLine={{ stroke: "#E2E8F0" }}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fill: "#64748B", fontSize: 13 }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    background: "#FFFFFF",
+                                    border: "1px solid #E2E8F0",
+                                    borderRadius: "8px",
+                                    boxShadow: "0 4px 20px -2px rgba(79, 70, 229, 0.1)",
+                                }}
+                                labelStyle={{
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    fontWeight: 700,
+                                    color: "#0F172A",
+                                }}
+                                itemStyle={{
+                                    color: "#0F172A",
+                                }}
+                            />
                             <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                                 {wasteData.map((entry, index) => (
                                     <Cell
@@ -119,14 +145,39 @@ const Statistics = ({ logs, trayPosition, latestAi }) => {
                             <CartesianGrid
                                 strokeDasharray="4 4"
                                 vertical={false}
+                                stroke="#E2E8F0"
                             />
-                            <XAxis dataKey="time" />
-                            <YAxis />
-                            <Tooltip />
+                            <XAxis
+                                dataKey="time"
+                                tick={{ fill: "#64748B", fontSize: 13 }}
+                                axisLine={{ stroke: "#E2E8F0" }}
+                                tickLine={false}
+                            />
+                            <YAxis
+                                tick={{ fill: "#64748B", fontSize: 13 }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    background: "#FFFFFF",
+                                    border: "1px solid #E2E8F0",
+                                    borderRadius: "8px",
+                                    boxShadow: "0 4px 20px -2px rgba(79, 70, 229, 0.1)",
+                                }}
+                                labelStyle={{
+                                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                                    fontWeight: 700,
+                                    color: "#0F172A",
+                                }}
+                                itemStyle={{
+                                    color: "#0F172A",
+                                }}
+                            />
                             <Bar
                                 dataKey="count"
                                 radius={[8, 8, 0, 0]}
-                                fill="#0ea5e9"
+                                fill="#4F46E5"
                             />
                         </BarChart>
                     </ResponsiveContainer>

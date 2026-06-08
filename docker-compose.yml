@@ -1,0 +1,95 @@
+services:
+    mysql:
+        image: mysql:8.4
+        restart: unless-stopped
+        env_file:
+            - ./.env
+        container_name: mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+            MYSQL_DATABASE: ${MYSQL_DATABASE:-pbl5_db}
+            MYSQL_USER: ${MYSQL_USER:-pbl5_user}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pbl5_password}
+        volumes:
+            - mysql_data:/var/lib/mysql
+        networks:
+            - db-be
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+
+    backend:
+        build:
+            context: ./backend
+        restart: unless-stopped
+        container_name: backend
+        init: true
+        env_file:
+            - ./backend/.env
+        ports:
+            - "${BACKEND_PORT:-5762}:5762"
+        networks:
+            - db-be
+            - be-fe
+        depends_on:
+            mysql:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "python",
+                    "-c",
+                    "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:5762/api/health', timeout=3).getcode() == 200 else 1)",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 15s
+
+    frontend:
+        build:
+            context: ./frontend
+            target: production
+        restart: unless-stopped
+        container_name: frontend
+        init: true
+        env_file:
+            - ./frontend/.env
+        environment:
+            VITE_WS_URL: ws://backend:5762/ws
+        ports:
+            - "${FRONTEND_PORT:-5173}:80"
+        depends_on:
+            backend:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "fetch('http://127.0.0.1:5173').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+                ]
+            interval: 15s
+            timeout: 5s
+            retries: 10
+            start_period: 15s
+        networks:
+            - be-fe
+
+volumes:
+    mysql_data:
+
+networks:
+    db-be:
+        driver: bridge
+        internal: true
+    be-fe:
+        driver: bridge
