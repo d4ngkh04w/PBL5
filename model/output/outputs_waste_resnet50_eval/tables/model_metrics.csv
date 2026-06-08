@@ -1,0 +1,2 @@
+model_name,weights,checkpoint_path,checkpoint_epoch,checkpoint_metric,test_loss,test_acc,test_macro_f1,test_weighted_f1,num_test_samples,created_at
+resnet50,None,/kaggle/input/models/nguynlonglb/resnet50-pbl5-v2/keras/default/1/best_model.pth,50,0.7681664159949209,1.3989805848524581,0.814437194127243,0.7763956088545538,0.816896352050421,7356,2026-06-06T12:14:15+00:00
