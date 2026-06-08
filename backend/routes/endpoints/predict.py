@@ -13,6 +13,8 @@ from services.predict_service import (
     save_prediction_result,
     save_image,
 )
+from services.websocket_manager import manager
+from services.system_state import system_state
 
 router = APIRouter()
 logger = logging.getLogger("console")
@@ -34,9 +36,41 @@ async def predict(
     await save_prediction_result(db, result)
 
     await run_in_threadpool(save_image, image_bytes, result.class_name)
-    
+
     background_tasks.add_task(notify_esp32, group=result.group, weight=weight)
 
     result.weight = weight
+
+    # Map group to bin index: recycling->1, organic->2, hazardous->3, non_recyclable->4
+    group_to_bin = {
+        "recycling": 1,
+        "organic": 2,
+        "hazardous": 3,
+        "non_recyclable": 4,
+    }
+    bin_index = group_to_bin.get(result.group, 1)
+    system_state.bin_weights[bin_index] = round(
+        system_state.bin_weights[bin_index] + weight, 2
+    )
+    system_state.latest_ai = {
+        "type": result.class_name,
+        "confidence": float(result.confidence),
+        "image": None,
+    }
+    system_state.add_log("AI Nhận diện rác", result.class_name)
+
+    await manager.broadcast_json(
+        {
+            "event": "NEW_TRASH_DETECTED",
+            "data": {
+                "class": result.group,
+                "class_name": result.class_name,
+                "group": result.group,
+                "confidence": float(result.confidence),
+                "weight": weight,
+                "image": None,
+            },
+        }
+    )
 
     return result

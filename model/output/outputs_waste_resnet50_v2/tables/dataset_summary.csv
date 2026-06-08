@@ -1,9 +1,0 @@
-﻿item,value
-dataset_root,/kaggle/input/datasets/nguynlonglb/pbl5-racthai-dut/splits
-num_classes,10
-class_names,"Battery, Biological, Cardboard, Clothes, E_Waste, Glass, Metal, Other, Paper, Plastic"
-train_images,34270
-val_images,7340
-test_images,7356
-total_images,48966
-created_at,2026-06-05T18:25:33

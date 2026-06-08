@@ -1,4 +1,4 @@
-const WS_URL = import.meta.env.VITE_WS_URL;
+const WS_URL = import.meta.env.VITE_WS_URL || `ws://${window.location.hostname}:5762/ws`;
 export const FRONTEND_API_KEY = import.meta.env.VITE_API_KEY || "";
 const ESP32_STREAM_CONTROL_URL =
     import.meta.env.VITE_ESP32_STREAM_CONTROL_URL || "";
@@ -107,5 +107,19 @@ export async function setEsp32StreamState(enabled) {
     } catch (error) {
         console.error("Failed to control ESP32 stream:", error);
         return false;
+    }
+}
+
+export async function getSystemStatus() {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5762/api`;
+    try {
+        const response = await fetch(`${API_BASE_URL}/status`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Failed to fetch system status:", error);
+        throw error;
     }
 }

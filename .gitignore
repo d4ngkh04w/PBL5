@@ -23,3 +23,50 @@ skills-lock.json
 theme.xml
 uploads/
 misclassified_images/
+=======
+.venv/
+env/
+venv/
+dataset/
+yolov8s-cls.pt
+test.py
+runs/
+__pycache__/
+*.log
+.env
+dist/
+build/
+*.spec
+.vscode/
+.idea/
+node_modules/
+
+# Local/generated folders not synced to Git
+waste_dataset_v1/
+BaoCao/
+venv310/
+
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.rar
+
+# Ignore markdown files except README
+*.md
+!README.md
+
+# Chặn các file model nặng
+*.pth
+backend/model/
+model/output/
+
+# Chặn database local và file tạm
+backend/test.db
+*.db
+~$*.docx
+
+# Chặn các file báo cáo cá nhân (nếu không muốn push lên Git chung)
+*.docx
+search_results.txt
+

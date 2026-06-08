@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
-import { setEsp32StreamState, wsService } from "./services/api";
+import { getSystemStatus, setEsp32StreamState, wsService } from "./services/api";
 import {
     BarChart3,
     LayoutDashboard,
@@ -31,31 +31,65 @@ const createLog = (action, result) => ({
 
 function App() {
     const [trayPosition, setTrayPosition] = useState(1);
-    const [targetTray, setTargetTray] = useState(2);
+    const [targetTray, setTargetTray] = useState(1);
     const [binWeights, setBinWeights] = useState({
-        1: 1.2,
-        2: 0.8,
-        3: 1.5,
-        4: 0.6,
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
     });
     const [doorOpen, setDoorOpen] = useState(false);
     const [toast, setToast] = useState("");
     const toastTimerRef = useRef(null);
     const [latestAi, setLatestAi] = useState({
-        type: "Nhựa",
-        confidence: 96.3,
+        type: "Chưa có",
+        confidence: 0,
         image: null,
     });
-    const [logs, setLogs] = useState([
-        createLog("Khởi động hệ thống", "Thành công"),
-        createLog("Đồng bộ cảm biến", "Thành công"),
-    ]);
+    const [logs, setLogs] = useState([]);
     const [isStreamActive, setIsStreamActive] = useState(true);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const pushLog = (action, result) => {
         setLogs((prev) => [createLog(action, result), ...prev].slice(0, 8));
     };
+
+    useEffect(() => {
+        const loadSystemStatus = async () => {
+            try {
+                const status = await getSystemStatus();
+
+                setTrayPosition(status.trayPosition ?? 1);
+                setTargetTray(status.targetTray ?? 1);
+                setDoorOpen(Boolean(status.doorOpen));
+                setBinWeights({
+                    1: Number(status.binWeights?.["1"] ?? status.binWeights?.[1] ?? 0),
+                    2: Number(status.binWeights?.["2"] ?? status.binWeights?.[2] ?? 0),
+                    3: Number(status.binWeights?.["3"] ?? status.binWeights?.[3] ?? 0),
+                    4: Number(status.binWeights?.["4"] ?? status.binWeights?.[4] ?? 0),
+                });
+
+                if (status.latestAi) {
+                    setLatestAi({
+                        type: status.latestAi.type || "Chưa có",
+                        confidence:
+                            status.latestAi.confidence <= 1
+                                ? Math.round(status.latestAi.confidence * 100)
+                                : status.latestAi.confidence,
+                        image: status.latestAi.image || null,
+                    });
+                }
+
+                if (Array.isArray(status.logs)) {
+                    setLogs(status.logs);
+                }
+            } catch (error) {
+                pushLog("Lấy trạng thái backend", "Thất bại");
+            }
+        };
+
+        loadSystemStatus();
+    }, []);
 
     // --- WEBSOCKET CONNECTION ---
     useEffect(() => {
@@ -65,7 +99,7 @@ function App() {
             console.log("🗑️  New trash detected:", data);
 
             // Backend returns: {"class": "hazardous", "confidence": 0.95, "image": "data:image/jpeg;..."}
-            const { class: trashClass, confidence, image } = data;
+            const { class: trashClass, confidence, image, weight } = data;
 
             // Map backend class names to frontend type names
             const typeMap = {
@@ -75,8 +109,23 @@ function App() {
                 recycling: "Nhựa",
             };
 
+            const binMap = {
+                recycling: 1,
+                organic: 2,
+                hazardous: 3,
+                non_recyclable: 4,
+            };
+
             const type = typeMap[trashClass] || "Khác";
             const confidencePercent = Math.round(confidence * 100);
+            const binIndex = binMap[trashClass];
+
+            if (binIndex && typeof weight === "number") {
+                setBinWeights((prevWeights) => ({
+                    ...prevWeights,
+                    [binIndex]: Number((prevWeights[binIndex] + weight).toFixed(2)),
+                }));
+            }
 
             setLatestAi({ type, confidence: confidencePercent, image });
             pushLog("AI Nhận diện rác", `${type} (${confidencePercent}%)`);
