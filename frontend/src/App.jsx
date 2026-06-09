@@ -131,7 +131,6 @@ function App() {
             }
 
             setLatestAi({ type, confidence: confidencePercent, image });
-            pushLog("AI Nhận diện rác", `${type} (${confidencePercent}%)`);
             showSuccess(`Nhận diện: ${type} - ${confidencePercent}%`);
         };
 

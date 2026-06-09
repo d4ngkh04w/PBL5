@@ -61,6 +61,7 @@ async def predict(
         "image": None,
     }
     system_state.add_log("AI Nhận diện rác", result.class_name)
+    await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
 
     await manager.broadcast_json(
         {

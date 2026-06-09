@@ -164,7 +164,7 @@ const Dashboard = ({
                                 </small>
                                 <small className="bin-weight">
                                     Khối lượng:{" "}
-                                    {(binWeights?.[bin] ?? 0).toFixed(2)} kg
+                                    {(binWeights?.[bin] ?? 0).toFixed(2)} g
                                 </small>
                             </div>
                         ))}
