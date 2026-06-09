@@ -85,15 +85,19 @@ void moveTrash(int groupId) {
   String name = (groupId >= 1 && groupId <= 4) ? groupNames[groupId] : groupNames[0];
   Serial.printf("[ACTION] Di chuyển đến ngăn %d (%s)\n", groupId, name.c_str());
 
+  // 1. Đảm bảo cửa đóng an toàn trước khi xoay mâm để tránh va chạm cơ khí
+  myServo.write(CLOSE_ANGLE);
+  delay(1000); // Chờ servo đóng hoàn toàn
+
   long positions[] = {0, 400, 800, 1200, 1600};
 
   digitalWrite(EN_PIN, LOW);  // LOW = bật driver (TB6600 của bạn)
   stepper.moveTo(positions[groupId]);
 
+  // 2. Chạy động cơ ổn định, loại bỏ handleClient() để không gây trễ nhịp xung
   unsigned long moveStart = millis();
   while (stepper.distanceToGo() != 0 && millis() - moveStart < 10000) {
     stepper.run();
-    server.handleClient();
   }
   stepper.stop();
   delay(1000);
