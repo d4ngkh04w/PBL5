@@ -69,8 +69,11 @@ class Model(ABC):
     def _load_weights(self) -> None:
         state_dict = torch.load(self.model_path, map_location=self.device)
         # Hỗ trợ cả file lưu toàn bộ checkpoint lẫn chỉ state_dict
-        if isinstance(state_dict, dict) and "model" in state_dict:
-            state_dict = state_dict["model"]
+        if isinstance(state_dict, dict):
+            if "model" in state_dict:
+                state_dict = state_dict["model"]
+            elif "model_state_dict" in state_dict:
+                state_dict = state_dict["model_state_dict"]
         self.net.load_state_dict(state_dict)
 
     @torch.no_grad()
@@ -240,15 +243,7 @@ class EnsembleModel:
 
 resnet50 = ResNet50(
     model_path=os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "model", "resnet50.pt")
-    ),
-    class_names=CLASS_NAMES,
-    mapped_class_names=MAPPED_CLASS_NAMES,
-)
-
-yolov8 = YOLOv8(
-    model_path=os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "model", "yolov8.pt")
+        os.path.join(os.path.dirname(__file__), "..", "model", "resnet50.pth")
     ),
     class_names=CLASS_NAMES,
     mapped_class_names=MAPPED_CLASS_NAMES,
@@ -256,7 +251,6 @@ yolov8 = YOLOv8(
 
 ensemble = EnsembleModel(
     [
-        (resnet50, 0.5),
-        (yolov8, 0.5),
+        (resnet50, 1.0),
     ]
 )

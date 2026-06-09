@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends
 
 from .deps import verify_api_key
-from .endpoints import health, predict
+from .endpoints import health, predict, status, ws
 
 router = APIRouter()
 
 router.include_router(health.router, prefix="/api")
+router.include_router(status.router, prefix="/api")
+router.include_router(ws.router)
 router.include_router(
     predict.router,
     prefix="/api",

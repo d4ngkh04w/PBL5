@@ -1,0 +1,11 @@
+class_name,clean_count,train_count,val_count,test_count,total_split_count
+Battery,945,661,141,143,945
+Biological,4224,2956,633,635,4224
+Cardboard,891,623,133,135,891
+Clothes,5324,3726,798,800,5324
+E_Waste,5284,3698,792,794,5284
+Glass,5094,3565,764,765,5094
+Metal,5323,3726,798,799,5323
+Paper,5455,3818,818,819,5455
+Plastic,5461,3822,819,820,5461
+Other,10965,7675,1644,1646,10965
