@@ -40,12 +40,35 @@ async def manual_rotate(req: RotateRequest):
         system_state.target_tray = req.tray_id
         system_state.door_open = False
         system_state.add_log("Xoay mâm (Manual)", f"Thành công (Ngăn {req.tray_id})")
+        
+        await manager.broadcast_json({
+            "event": "SYSTEM_STATUS",
+            "data": {
+                "trayPosition": system_state.tray_position,
+                "targetTray": system_state.target_tray,
+                "doorOpen": system_state.door_open,
+                "binWeights": system_state.bin_weights,
+                "logs": system_state.logs,
+                "latestAi": system_state.latest_ai
+            }
+        })
         await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
         
         return {"status": "success", "message": f"Rotated to tray {req.tray_id}"}
     except Exception as e:
         logger.exception("Failed to call ESP32 manual rotate")
         system_state.add_log("Xoay mâm (Manual)", f"Lỗi ESP32")
+        await manager.broadcast_json({
+            "event": "SYSTEM_STATUS",
+            "data": {
+                "trayPosition": system_state.tray_position,
+                "targetTray": system_state.target_tray,
+                "doorOpen": system_state.door_open,
+                "binWeights": system_state.bin_weights,
+                "logs": system_state.logs,
+                "latestAi": system_state.latest_ai
+            }
+        })
         await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
         raise HTTPException(status_code=500, detail="Failed to communicate with ESP32")
 
@@ -68,6 +91,18 @@ async def manual_door(req: DoorRequest):
         system_state.door_open = is_open
         action_vn = "Mở cửa" if is_open else "Đóng cửa"
         system_state.add_log(f"{action_vn} (Manual)", "Thành công")
+        
+        await manager.broadcast_json({
+            "event": "SYSTEM_STATUS",
+            "data": {
+                "trayPosition": system_state.tray_position,
+                "targetTray": system_state.target_tray,
+                "doorOpen": system_state.door_open,
+                "binWeights": system_state.bin_weights,
+                "logs": system_state.logs,
+                "latestAi": system_state.latest_ai
+            }
+        })
         await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
         
         return {"status": "success", "message": f"Door {req.action} successful"}
@@ -75,6 +110,17 @@ async def manual_door(req: DoorRequest):
         logger.exception(f"Failed to call ESP32 manual door ({req.action})")
         action_vn = "Mở cửa" if req.action == "open" else "Đóng cửa"
         system_state.add_log(f"{action_vn} (Manual)", f"Lỗi ESP32")
+        await manager.broadcast_json({
+            "event": "SYSTEM_STATUS",
+            "data": {
+                "trayPosition": system_state.tray_position,
+                "targetTray": system_state.target_tray,
+                "doorOpen": system_state.door_open,
+                "binWeights": system_state.bin_weights,
+                "logs": system_state.logs,
+                "latestAi": system_state.latest_ai
+            }
+        })
         await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
         raise HTTPException(status_code=500, detail="Failed to communicate with ESP32")
 

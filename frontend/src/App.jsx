@@ -140,12 +140,44 @@ function App() {
             }
         };
 
+        const handleSystemStatus = (status) => {
+            console.log("🔄 System status update:", status);
+            if (status.trayPosition !== undefined) setTrayPosition(status.trayPosition);
+            if (status.targetTray !== undefined) setTargetTray(status.targetTray);
+            if (status.doorOpen !== undefined) setDoorOpen(Boolean(status.doorOpen));
+            
+            if (status.binWeights) {
+                setBinWeights({
+                    1: Number(status.binWeights["1"] ?? status.binWeights[1] ?? 0),
+                    2: Number(status.binWeights["2"] ?? status.binWeights[2] ?? 0),
+                    3: Number(status.binWeights["3"] ?? status.binWeights[3] ?? 0),
+                    4: Number(status.binWeights["4"] ?? status.binWeights[4] ?? 0),
+                });
+            }
+
+            if (status.latestAi) {
+                setLatestAi({
+                    type: status.latestAi.type || "Chưa có",
+                    confidence: status.latestAi.confidence <= 1
+                        ? Math.round(status.latestAi.confidence * 100)
+                        : status.latestAi.confidence,
+                    image: status.latestAi.image || null,
+                });
+            }
+
+            if (Array.isArray(status.logs)) {
+                setLogs(status.logs);
+            }
+        };
+
         wsService.on("NEW_TRASH_DETECTED", handleNewTrashDetected);
         wsService.on("SYSTEM_LOG", handleSystemLog);
+        wsService.on("SYSTEM_STATUS", handleSystemStatus);
 
         return () => {
             wsService.off("NEW_TRASH_DETECTED", handleNewTrashDetected);
             wsService.off("SYSTEM_LOG", handleSystemLog);
+            wsService.off("SYSTEM_STATUS", handleSystemStatus);
             wsService.disconnect();
         };
     }, []);

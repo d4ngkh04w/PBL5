@@ -61,6 +61,20 @@ async def predict(
         "image": None,
     }
     system_state.add_log("AI Nhận diện rác", result.class_name)
+    
+    # Broadcast SYSTEM_STATUS
+    await manager.broadcast_json({
+        "event": "SYSTEM_STATUS",
+        "data": {
+            "trayPosition": system_state.tray_position,
+            "targetTray": system_state.target_tray,
+            "doorOpen": system_state.door_open,
+            "binWeights": system_state.bin_weights,
+            "logs": system_state.logs,
+            "latestAi": system_state.latest_ai
+        }
+    })
+
     await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
 
     await manager.broadcast_json(
@@ -78,3 +92,4 @@ async def predict(
     )
 
     return result
+
