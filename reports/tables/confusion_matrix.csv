@@ -1,0 +1,11 @@
+,Battery,Biological,Cardboard,Clothes,E_Waste,Glass,Metal,Other,Paper,Plastic
+Battery,751,0,2,0,3,0,9,1,0,1
+Biological,2,575,4,2,1,6,16,12,9,8
+Cardboard,10,3,1046,1,10,3,16,18,182,19
+Clothes,0,5,1,762,13,0,3,6,3,7
+E_Waste,17,2,2,2,671,8,28,49,8,7
+Glass,1,5,0,2,3,710,13,5,9,17
+Metal,13,17,2,5,20,21,649,29,24,19
+Other,20,26,11,18,67,17,74,1323,21,69
+Paper,7,5,111,2,16,5,19,12,605,37
+Plastic,2,12,6,8,13,24,17,27,20,691

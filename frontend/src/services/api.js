@@ -123,3 +123,38 @@ export async function getSystemStatus() {
         throw error;
     }
 }
+
+export async function controlRotateTray(trayId) {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5762/api`;
+    try {
+        const response = await fetch(`${API_BASE_URL}/control/rotate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ tray_id: trayId }),
+        });
+        return response.ok;
+    } catch (error) {
+        console.error("Failed to control rotate tray:", error);
+        return false;
+    }
+}
+
+export async function controlToggleDoor(isOpen) {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5762/api`;
+    try {
+        const action = isOpen ? "open" : "close";
+        const response = await fetch(`${API_BASE_URL}/control/door`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ action }),
+        });
+        return response.ok;
+    } catch (error) {
+        console.error("Failed to control toggle door:", error);
+        return false;
+    }
+}

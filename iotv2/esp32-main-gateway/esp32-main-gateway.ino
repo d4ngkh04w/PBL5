@@ -139,6 +139,46 @@ void handleClassificationResult() {
   }
 }
 
+void handleRotate() {
+  if (server.hasArg("tray")) {
+    int trayId = server.arg("tray").toInt();
+    if (trayId >= 1 && trayId <= 4) {
+      server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Rotating tray\"}");
+      Serial.printf("[MANUAL] Xoay mam toi ngan %d\n", trayId);
+      
+      long positions[] = {0, 400, 800, 1200, 1600};
+      digitalWrite(EN_PIN, LOW);
+      stepper.moveTo(positions[trayId]);
+      
+      unsigned long moveStart = millis();
+      while (stepper.distanceToGo() != 0 && millis() - moveStart < 10000) {
+        stepper.run();
+      }
+      stepper.stop();
+      return;
+    }
+  }
+  server.send(400, "application/json", "{\"status\":\"error\", \"message\":\"Invalid tray\"}");
+}
+
+void handleDoor() {
+  if (server.hasArg("action")) {
+    String action = server.arg("action");
+    if (action == "open") {
+      server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Opening door\"}");
+      Serial.println("[MANUAL] Mo cua");
+      myServo.write(OPEN_ANGLE);
+      return;
+    } else if (action == "close") {
+      server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Closing door\"}");
+      Serial.println("[MANUAL] Dong cua");
+      myServo.write(CLOSE_ANGLE);
+      return;
+    }
+  }
+  server.send(400, "application/json", "{\"status\":\"error\", \"message\":\"Invalid action\"}");
+}
+
 // ========== SETUP ==========
 
 void setup() {
@@ -199,6 +239,8 @@ void setup() {
 
   // --- Web Server ---
   server.on("/api/classify", HTTP_GET, handleClassificationResult);
+  server.on("/api/control/rotate", HTTP_GET, handleRotate);
+  server.on("/api/control/door", HTTP_GET, handleDoor);
   server.begin();
 
   Serial.println("✅ Hệ thống ESP32 đã sẵn sàng");

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
-import { getSystemStatus, setEsp32StreamState, wsService } from "./services/api";
+import { getSystemStatus, setEsp32StreamState, wsService, controlRotateTray, controlToggleDoor } from "./services/api";
 import {
     BarChart3,
     LayoutDashboard,
@@ -132,10 +132,18 @@ function App() {
             showSuccess(`Nhận diện: ${type} - ${confidencePercent}%`);
         };
 
+        const handleSystemLog = (data) => {
+            if (Array.isArray(data)) {
+                setLogs(data);
+            }
+        };
+
         wsService.on("NEW_TRASH_DETECTED", handleNewTrashDetected);
+        wsService.on("SYSTEM_LOG", handleSystemLog);
 
         return () => {
             wsService.off("NEW_TRASH_DETECTED", handleNewTrashDetected);
+            wsService.off("SYSTEM_LOG", handleSystemLog);
             wsService.disconnect();
         };
     }, []);
@@ -146,41 +154,32 @@ function App() {
         toastTimerRef.current = window.setTimeout(() => setToast(""), 2400);
     };
 
-    const handleRotateTray = () => {
-        setTrayPosition((prev) => {
-            const next = targetTray;
+    const handleRotateTray = async () => {
+        const next = targetTray;
 
-            if (prev === next) {
-                showSuccess(`Mâm đã ở sẵn ngăn ${next}`);
-                pushLog("Xoay mâm", `Không đổi (đã ở vị trí ${next})`);
-                return prev;
-            }
+        if (trayPosition === next) {
+            showSuccess(`Mâm đã ở sẵn ngăn ${next}`);
+            return;
+        }
 
-            const type = WASTE_TYPES[(next - 1) % WASTE_TYPES.length];
-            const confidence = Number((90 + Math.random() * 9.8).toFixed(1));
-            const addedWeight = Number((0.05 + Math.random() * 0.3).toFixed(2));
-
-            setBinWeights((prevWeights) => ({
-                ...prevWeights,
-                [next]: Number((prevWeights[next] + addedWeight).toFixed(2)),
-            }));
-
-            setLatestAi({ type, confidence });
-            pushLog("Xoay mâm", `Thành công (vị trí ${next})`);
-            showSuccess(`Đã xoay mâm sang ngăn ${next}`);
-
-            return next;
-        });
+        const success = await controlRotateTray(next);
+        if (success) {
+            setTrayPosition(next);
+            showSuccess(`Đã ra lệnh xoay mâm sang ngăn ${next}`);
+        } else {
+            showSuccess("Lỗi khi xoay mâm. Kiểm tra kết nối ESP32.");
+        }
     };
 
-    const handleToggleDoor = () => {
-        setDoorOpen((prev) => {
-            const next = !prev;
-            const actionLabel = next ? "Mở cửa" : "Đóng cửa";
-            pushLog(actionLabel, "Thành công");
-            showSuccess(next ? "Đã mở cửa sập" : "Đã đóng cửa sập");
-            return next;
-        });
+    const handleToggleDoor = async () => {
+        const next = !doorOpen;
+        const success = await controlToggleDoor(next);
+        if (success) {
+            setDoorOpen(next);
+            showSuccess(next ? "Đã ra lệnh mở cửa" : "Đã ra lệnh đóng cửa");
+        } else {
+            showSuccess("Lỗi khi điều khiển cửa. Kiểm tra kết nối ESP32.");
+        }
     };
 
     const handleStreamToggle = async () => {
