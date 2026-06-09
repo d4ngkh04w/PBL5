@@ -49,6 +49,9 @@ async def predict(
         "non_recyclable": 4,
     }
     bin_index = group_to_bin.get(result.group, 1)
+    system_state.tray_position = bin_index
+    system_state.target_tray = bin_index
+    system_state.door_open = False
     system_state.bin_weights[bin_index] = round(
         system_state.bin_weights[bin_index] + weight, 2
     )

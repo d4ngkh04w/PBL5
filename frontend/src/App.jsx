@@ -125,6 +125,9 @@ function App() {
                     ...prevWeights,
                     [binIndex]: Number((prevWeights[binIndex] + weight).toFixed(2)),
                 }));
+                setTrayPosition(binIndex);
+                setTargetTray(binIndex);
+                setDoorOpen(false);
             }
 
             setLatestAi({ type, confidence: confidencePercent, image });
@@ -160,6 +163,11 @@ function App() {
         if (trayPosition === next) {
             showSuccess(`Mâm đã ở sẵn ngăn ${next}`);
             return;
+        }
+
+        if (doorOpen) {
+            setDoorOpen(false);
+            showSuccess("Tự động đóng cửa để xoay mâm an toàn");
         }
 
         const success = await controlRotateTray(next);

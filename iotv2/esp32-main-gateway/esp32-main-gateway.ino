@@ -146,6 +146,11 @@ void handleRotate() {
       server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Rotating tray\"}");
       Serial.printf("[MANUAL] Xoay mam toi ngan %d\n", trayId);
       
+      // Đảm bảo cửa đóng an toàn trước khi xoay
+      Serial.println("[MANUAL] Đóng cửa an toàn trước khi xoay");
+      myServo.write(CLOSE_ANGLE);
+      delay(1000); // Chờ servo đóng xong
+      
       long positions[] = {0, 400, 800, 1200, 1600};
       digitalWrite(EN_PIN, LOW);
       stepper.moveTo(positions[trayId]);

@@ -36,6 +36,9 @@ async def manual_rotate(req: RotateRequest):
         response.raise_for_status()
         
         # Log and notify
+        system_state.tray_position = req.tray_id
+        system_state.target_tray = req.tray_id
+        system_state.door_open = False
         system_state.add_log("Xoay mâm (Manual)", f"Thành công (Ngăn {req.tray_id})")
         await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
         
@@ -61,7 +64,9 @@ async def manual_door(req: DoorRequest):
         response.raise_for_status()
         
         # Log and notify
-        action_vn = "Mở cửa" if req.action == "open" else "Đóng cửa"
+        is_open = req.action == "open"
+        system_state.door_open = is_open
+        action_vn = "Mở cửa" if is_open else "Đóng cửa"
         system_state.add_log(f"{action_vn} (Manual)", "Thành công")
         await manager.broadcast_json({"event": "SYSTEM_LOG", "data": system_state.logs})
         
