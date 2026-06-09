@@ -98,25 +98,39 @@ function App() {
         const handleNewTrashDetected = (data) => {
             console.log("🗑️  New trash detected:", data);
 
-            // Backend returns: {"class": "hazardous", "confidence": 0.95, "image": "data:image/jpeg;..."}
-            const { class: trashClass, confidence, image, weight } = data;
+            // Backend returns: {"class": "hazardous", "class_name": "battery", "confidence": 0.95, "weight": 50, ...}
+            const { class: trashClass, class_name: className, confidence, image, weight } = data;
 
-            // Map backend class names to frontend type names
-            const typeMap = {
-                hazardous: "Kim loại",
-                non_recyclable: "Khác",
-                organic: "Giấy",
-                recycling: "Nhựa",
-            };
-
+            // Map backend group classes to frontend bin indices
             const binMap = {
-                recycling: 1,
+                hazardous: 1,
                 organic: 2,
-                hazardous: 3,
+                recycling: 3,
                 non_recyclable: 4,
             };
 
-            const type = typeMap[trashClass] || "Khác";
+            // Map detail class to Vietnamese for display
+            const classNameToVi = {
+                battery: "Pin",
+                biological: "Sinh học",
+                cardboard: "Bìa carton",
+                clothes: "Quần áo",
+                "e-waste": "Rác điện tử",
+                glass: "Thủy tinh",
+                metal: "Kim loại",
+                paper: "Giấy",
+                plastic: "Nhựa",
+                shoes: "Giày dép"
+            };
+            
+            const groupToVi = {
+                hazardous: "Độc hại",
+                organic: "Hữu cơ",
+                recycling: "Tái chế",
+                non_recyclable: "Khác",
+            };
+
+            const type = classNameToVi[className] || groupToVi[trashClass] || "Khác";
             const confidencePercent = Math.round(confidence * 100);
             const binIndex = binMap[trashClass];
 

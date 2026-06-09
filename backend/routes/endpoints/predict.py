@@ -41,11 +41,11 @@ async def predict(
 
     result.weight = weight
 
-    # Map group to bin index: recycling->1, organic->2, hazardous->3, non_recyclable->4
+    # Map group to bin index: hazardous->1, organic->2, recycling->3, non_recyclable->4
     group_to_bin = {
-        "recycling": 1,
+        "hazardous": 1,
         "organic": 2,
-        "hazardous": 3,
+        "recycling": 3,
         "non_recyclable": 4,
     }
     bin_index = group_to_bin.get(result.group, 1)

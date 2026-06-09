@@ -570,47 +570,7 @@ def build_docx(md_path, out_path):
 
 
 def try_word_com_update(docx_path, pdf_path):
-    if win32com is None:
-        return False, "pywin32/Word COM không khả dụng."
-
-    abs_docx = os.path.abspath(docx_path)
-    abs_pdf = os.path.abspath(pdf_path)
-    word = None
-    doc = None
-    try:
-        word = win32com.client.DispatchEx("Word.Application")
-        word.Visible = False
-        word.DisplayAlerts = 0
-        doc = word.Documents.Open(abs_docx)
-
-        for section in doc.Sections:
-            section.PageSetup.PaperSize = 7
-            section.PageSetup.TopMargin = word.CentimetersToPoints(2)
-            section.PageSetup.BottomMargin = word.CentimetersToPoints(2)
-            section.PageSetup.LeftMargin = word.CentimetersToPoints(3)
-            section.PageSetup.RightMargin = word.CentimetersToPoints(2)
-
-        doc.Fields.Update()
-        for toc in doc.TablesOfContents:
-            toc.Update()
-        doc.Repaginate()
-        pages = doc.ComputeStatistics(2)
-        doc.SaveAs(abs_docx)
-        doc.ExportAsFixedFormat(abs_pdf, ExportFormat=17)
-        return True, f"Word COM đã update fields, repaginate và xuất PDF. Số trang Word báo: {pages}."
-    except Exception as e:
-        return False, f"Word COM lỗi: {e}"
-    finally:
-        try:
-            if doc is not None:
-                doc.Close(SaveChanges=True)
-        except Exception:
-            pass
-        try:
-            if word is not None:
-                word.Quit()
-        except Exception:
-            pass
+    return False, "Bỏ qua update bằng Word COM để tránh treo tiến trình. Người dùng tự update TOC bằng Ctrl+A -> F9."
 
 
 def inspect_docx(docx_path):
