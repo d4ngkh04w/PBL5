@@ -66,9 +66,8 @@ def preprocess_image(img_pil: Image.Image) -> Image.Image:
 def predict_image(img: bytes) -> PredictionResponse:
     try:
         with Image.open(io.BytesIO(img)) as image:
-            prepared_image = preprocess_image(
-                ImageOps.exif_transpose(image).convert("RGB")
-            )
+            # Đã tắt preprocess_image bằng OpenCV để giữ nguyên phân phối ảnh giống lúc train
+            prepared_image = ImageOps.exif_transpose(image).convert("RGB")
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         console.warning("Invalid image payload: %s", exc)
         raise InvalidImage() from exc

@@ -107,7 +107,7 @@ class Model(ABC):
 
 class ResNet50(Model):
     __DROPOUT = 0.35
-    __IMGSZ = 384
+    __IMGSZ = 224
     __MEAN = [0.485, 0.456, 0.406]
     __STD = [0.229, 0.224, 0.225]
 
@@ -117,8 +117,7 @@ class ResNet50(Model):
 
         self._transform = transforms.Compose(
             [
-                transforms.Resize(self.__IMGSZ + 32),
-                transforms.CenterCrop(self.__IMGSZ),
+                transforms.Resize((self.__IMGSZ, self.__IMGSZ)),
                 transforms.ToTensor(),
                 transforms.Normalize(self.__MEAN, self.__STD),
             ]
