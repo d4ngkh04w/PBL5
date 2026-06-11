@@ -124,6 +124,20 @@ export async function getSystemStatus() {
     }
 }
 
+export async function getStatistics() {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5762/api`;
+    try {
+        const response = await fetch(`${API_BASE_URL}/statistics`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Failed to fetch statistics:", error);
+        throw error;
+    }
+}
+
 export async function controlRotateTray(trayId) {
     const API_BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5762/api`;
     try {
